@@ -132,7 +132,7 @@ wheels = [
 [[package]]
 name = "fast-whisper-transcribe"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "faster-whisper" },
     { name = "mlx-whisper", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },

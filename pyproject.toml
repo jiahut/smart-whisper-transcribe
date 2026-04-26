@@ -9,3 +9,13 @@ dependencies = [
     "mlx-whisper>=0.4.0 ; platform_machine == 'arm64' and sys_platform == 'darwin'",
     "psutil>=5.9.0",
 ]
+
+[project.scripts]
+smart-transcribe = "main:main"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["main", "smart_transcribe"]
