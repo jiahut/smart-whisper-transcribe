@@ -145,7 +145,7 @@ def main():
     parser.add_argument("--device", default="auto", help="计算设备 (auto/cpu/cuda)")
     parser.add_argument("--compute_type", default="auto", help="计算精度 (auto/int8/float16)")
     parser.add_argument("--language", default="zh", help="语言代码 (auto表示自动检测)")
-    parser.add_argument("--initial_prompt", default="这是一段简体中文的音频文件", help="前置上下文提示词")
+    parser.add_argument("--initial_prompt", default="你好！这里是一段标准的简体中文语音记录。请问准备好开始了吗？好的，那就让我们开始吧！", help="前置上下文提示词")
     parser.add_argument("--beam_size", type=int, default=5, help="Beam search 大小")
 
     args = parser.parse_args()
