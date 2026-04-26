@@ -13,33 +13,31 @@
 
 ## 🚀 快速开始
 
-### 1. 安装依赖
+### 1. 全局安装 (推荐)
 
-推荐使用极速包管理器 [uv](https://github.com/astral-sh/uv) 在虚拟环境中安装依赖，以获得最佳体验：
+本项目已支持作为命令行工具进行全局安装。推荐使用 [uv](https://github.com/astral-sh/uv) 进行极速安装：
 
 ```bash
-# 1. 创建并激活虚拟环境
+# 在项目根目录下执行全局安装
+uv tool install .
+
+# 或者使用可编辑模式（推荐开发者使用，修改代码后实时生效）
+uv tool install -e .
+```
+
+*备选方案（仅在当前目录下同步开发环境依赖）：*
+```bash
 uv venv
-source .venv/bin/activate  # Mac/Linux
-# .venv\Scripts\activate   # Windows
-
-# 2. 极速安装依赖
-uv pip install -r requirements.txt
+source .venv/bin/activate
+uv sync
 ```
-
-*备选方案（使用传统 pip）：*
-```bash
-pip install -r requirements.txt
-```
-
-> **注意**：`requirements.txt` 内置了针对 Mac arm64 的环境过滤规则，仅在 Mac 环境下才会安装 `mlx-whisper`，保证跨平台分享时不报错。
 
 ### 2. 基本使用
 
-你只需要传入音频文件，脚本会自动探测当前机器的最优配置（引擎、模型大小、计算精度）并执行：
+安装完成后，你可以在任何目录下直接使用 `smart-transcribe` 命令。只需要传入音频文件，脚本会自动探测当前机器的最优配置（引擎、模型大小、计算精度）并执行：
 
 ```bash
-python smart_transcribe.py path/to/your/audio.mp3
+smart-transcribe path/to/your/audio.mp3
 ```
 
 生成的高精度 `_音频_精准版.srt` 字幕文件会自动保存在原音频的同级目录下。
@@ -49,7 +47,7 @@ python smart_transcribe.py path/to/your/audio.mp3
 你也可以随时手动覆盖智能探测的结果：
 
 ```bash
-python smart_transcribe.py audio.mp3 \
+smart-transcribe audio.mp3 \
     --model small \
     --backend faster-whisper \
     --device cpu \
@@ -61,5 +59,5 @@ python smart_transcribe.py audio.mp3 \
 查看所有可用参数说明：
 
 ```bash
-python smart_transcribe.py --help
+smart-transcribe --help
 ```
