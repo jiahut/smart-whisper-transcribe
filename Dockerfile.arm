@@ -1,0 +1,45 @@
+FROM nvcr.io/nvidia/pytorch:25.04-py3
+
+# 设置代理加速构建过程的网络请求
+ENV HTTP_PROXY=http://10.158.68.105:1080
+ENV HTTPS_PROXY=http://10.158.68.105:1080
+ENV http_proxy=http://10.158.68.105:1080
+ENV https_proxy=http://10.158.68.105:1080
+
+# 1. 安装 ffmpeg (由于 apt 代理问题，使用静态二进制文件)
+RUN curl -x http://10.158.68.105:1080 -L -o /tmp/ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-arm64-static.tar.xz && \
+    tar -xvf /tmp/ffmpeg.tar.xz -C /tmp && \
+    mv /tmp/ffmpeg-*-static/ffmpeg /usr/local/bin/ && \
+    mv /tmp/ffmpeg-*-static/ffprobe /usr/local/bin/ && \
+    rm -rf /tmp/ffmpeg*
+
+# 2. 安装 uv 包管理器
+RUN curl -x http://10.158.68.105:1080 -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="/usr/local/bin" sh
+
+# 3. 从源码编译 CTranslate2 并显式开启 CUDA 支持
+# 针对 Tesla T4 GPU，Compute Capability 为 7.5
+RUN git clone --branch v4.5.0 --recursive https://github.com/OpenNMT/CTranslate2.git /opt/CTranslate2
+
+WORKDIR /opt/CTranslate2/build
+RUN cmake -DWITH_CUDA=ON -DWITH_CUDNN=ON -DOPENMP_RUNTIME=COMP -DWITH_MKL=OFF -DCMAKE_INSTALL_PREFIX=/usr/local .. && \
+    make -j$(nproc) && \
+    make install && \
+    ldconfig
+
+# 编译 CTranslate2 的 Python 绑定
+WORKDIR /opt/CTranslate2/python
+RUN uv pip install --system --break-system-packages pybind11 && \
+    python setup.py bdist_wheel && \
+    uv pip install --system --break-system-packages dist/*.whl
+
+# 4. 准备项目运行环境
+WORKDIR /app
+COPY pyproject.toml requirements.txt uv.lock ./
+COPY . .
+
+# 从 requirements.txt 中剔除 ctranslate2，防止 uv pip 从 PyPI 下载没有 CUDA 支持的 CPU 版本覆盖我们刚才编译的版本
+RUN grep -v -i "ctranslate2" requirements.txt > req_filtered.txt && \
+    uv pip install --system --break-system-packages -r req_filtered.txt
+
+ENTRYPOINT ["python", "smart_transcribe.py"]
+CMD ["--help"]

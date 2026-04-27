@@ -1,2 +1,3 @@
 build/
 smart_whisper_transcribe.egg-info/
+*.mp3

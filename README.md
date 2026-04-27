@@ -61,3 +61,50 @@ smart-transcribe audio.mp3 \
 ```bash
 smart-transcribe --help
 ```
+
+### 4. 使用 Docker 运行 (推荐 Linux 服务器/GPU 环境)
+
+如果你在 Linux 服务器上运行（特别是拥有 NVIDIA GPU 的环境），可以通过 Docker 隔离复杂的依赖。我们将脚本配置成了容器的 Entrypoint，你可以像执行命令行一样向容器传递参数。
+
+**构建镜像：**
+```bash
+docker build -t smart-whisper:latest .
+```
+
+**运行容器：**
+为了让容器能读取到你的音频文件并保存生成的字幕，并且**避免每次重复下载模型**，请务必挂载当前工作目录以及宿主机的 Hugging Face 缓存目录。
+
+```bash
+# 假设你的音频文件在当前目录下，文件名为 audio.mp3
+docker run --rm --gpus all --ipc=host \
+    -v ~/.cache/huggingface:/root/.cache/huggingface \
+    -v $(pwd):/app \
+    smart-whisper:latest audio.mp3
+    
+# 你也可以在后面继续追加高级参数
+docker run --rm --gpus all --ipc=host \
+    -v ~/.cache/huggingface:/root/.cache/huggingface \
+    -v $(pwd):/app \
+    smart-whisper:latest audio.mp3 --model medium
+```
+
+### 5. 特殊架构支持：ARM64 + NVIDIA GPU (如 aarch64 服务器)
+
+如果在 **ARM 架构**的 Linux 服务器（例如拥有 NVIDIA Tesla T4 等 GPU 的 `aarch64` 机器）上运行，由于 PyPI 官方提供的 `ctranslate2` (Faster-Whisper 的底层推理库) 预编译包默认不支持 CUDA，直接使用默认的 Dockerfile 会报错 `This CTranslate2 package was not compiled with CUDA support` 并在实际推理时回退到 CPU。
+
+为此，我们提供了专门的 `Dockerfile.arm`。它会在构建镜像时，从 C++ 源码重新编译带有 CUDA 支持的 `CTranslate2`：
+
+**构建 ARM64 GPU 镜像 (源码编译耗时较长，请耐心等待)：**
+```bash
+docker build -t smart-whisper-arm:latest -f Dockerfile.arm .
+```
+
+**运行容器：**
+运行方式与常规 Docker 完全一致，只需将镜像名称替换为 `smart-whisper-arm:latest` 即可：
+
+```bash
+docker run --rm --gpus all --ipc=host \
+    -v ~/.cache/huggingface:/root/.cache/huggingface \
+    -v $(pwd):/app \
+    smart-whisper-arm:latest audio.mp3
+```
