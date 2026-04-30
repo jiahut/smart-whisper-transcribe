@@ -1,0 +1,11 @@
+# Compiled binaries
+transcribe-task-mgr
+transcribe-task-mgr.exe
+transcribe-task-mgr-*
+
+# Local runtime files
+tasks.db
+tasks.db-journal
+tasks.db-shm
+tasks.db-wal
+uploads/
